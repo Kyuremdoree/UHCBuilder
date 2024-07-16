@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="UHC_Builder:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/UHC_Builder_jar</output-path>
+    <root id="archive" name="UHC_Builder.jar">
+      <element id="module-output" name="UHC_Builder" />
+      <element id="file-copy" path="$PROJECT_DIR$/../SwitchUHCs/src/main/resources/plugin.yml" />
+    </root>
+  </artifact>
+</component>

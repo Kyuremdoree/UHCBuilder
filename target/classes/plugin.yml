@@ -1,0 +1,4 @@
+name: UHC_Builder
+version: '1.0'
+main: switchuhc.uhc_builder.UHC_Builder
+depend: [ProtocolLib, PlaceholderAPI]
