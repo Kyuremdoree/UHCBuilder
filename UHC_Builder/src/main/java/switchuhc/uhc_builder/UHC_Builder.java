@@ -4,7 +4,8 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketContainer;
-import me.clip.placeholderapi.PlaceholderAPIPlugin;
+import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -17,8 +18,11 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.Scoreboard;
+import switchuhc.uhc_builder.classes.UHCBuilderGame;
 import switchuhc.uhc_builder.listener.PlayerListener;
 import switchuhc.uhc_builder.utilitaires.GameStatue;
+import switchuhc.uhc_builder.utilitaires.Timer;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -26,85 +30,48 @@ import java.util.List;
 
 public final class UHC_Builder extends JavaPlugin {
 
+    @Getter @Setter
     private List<Player> playerList;
+
+    @Getter @Setter
     private ProtocolManager protocolMgr;
 
+    @Getter @Setter
     private PacketContainer scoreboardPacketContainer;
 
+    @Getter @Setter
     private PluginManager pm;
+
+    @Getter @Setter
     private GameStatue gameStatue;
+
+    @Getter @Setter
     private ItemStack menuItem;
 
+    @Getter @Setter
     private Inventory menuInventory;
-    private boolean teaming;
 
+    @Getter @Setter
+    private Inventory startInventory;
 
-    public List<Player> getPlayerList() {
-        return playerList;
-    }
+    @Getter @Setter
+    private UHCBuilderGame game;
 
-    public void setPlayerList(List<Player> playerList) {
-        this.playerList = playerList;
-    }
-
-
-    public ProtocolManager getProtocolMgr() {
-        return protocolMgr;
-    }
-
-    public void setProtocolMgr(ProtocolManager protocolMgr) {
-        this.protocolMgr = protocolMgr;
-    }
-
-    public PacketContainer getScoreboardPacketContainer() {
-        return scoreboardPacketContainer;
-    }
-
-    public PluginManager getPm() {
-        return pm;
-    }
-
-    public GameStatue getGameStatue() {
-        return gameStatue;
-    }
-
-    public void setGameStatue(GameStatue gameStatue) {
-        this.gameStatue = gameStatue;
-    }
-
-    public ItemStack getMenuItem() {
-        return menuItem;
-    }
-
-    public void setMenuItem(ItemStack menuItem) {
-        this.menuItem = menuItem;
-    }
-
-    public Inventory getMenuInventory() {
-        return menuInventory;
-    }
-
-    public void setMenuInventory(Inventory menuInventory) {
-        this.menuInventory = menuInventory;
-    }
-
-    public boolean isTeaming() {
-        return teaming;
-    }
-
-    public void setTeaming(boolean teaming) {
-        this.teaming = teaming;
-    }
+    @Getter @Setter
+    public Scoreboard scoreboard;
 
     @Override
     public void onEnable() {
         Bukkit.getLogger().info("[UHC BUILDER] Plugin Initialized");
+        Bukkit.getWorlds().forEach(world -> world.setGameRuleValue("naturalRegeneration", "false"));
         protocolMgr = ProtocolLibrary.getProtocolManager();
         gameStatue = GameStatue.Waiting;
         scoreboardPacketContainer = new PacketContainer(PacketType.Play.Server.SCOREBOARD_OBJECTIVE);
-        PlaceholderAPIPlugin placeholderAPIPlugin = (PlaceholderAPIPlugin) Bukkit.getPluginManager().getPlugin("PlaceholderAPI");
         pm = getServer().getPluginManager();
         pm.registerEvents(new PlayerListener(this), this);
+
+        game = new UHCBuilderGame(this);
+        pm.registerEvents(game, this);
 
         playerList = new ArrayList<>();
 
@@ -134,7 +101,26 @@ public final class UHC_Builder extends JavaPlugin {
         itemMeta = itActual.getItemMeta();
         itemMeta.setDisplayName(ChatColor.GREEN + "Start");
         itActual.setItemMeta(itemMeta);
+        menuInventory.setItem(40, itActual);
+
+        itActual = new ItemStack(Material.GOLD_SWORD);
+        itemMeta = itActual.getItemMeta();
+        itemMeta.setDisplayName(ChatColor.RED + "PvP");
+        itActual.setItemMeta(itemMeta);
+        menuInventory.setItem(10, itActual);
+
+        itActual = new ItemStack(Material.OBSIDIAN);
+        itemMeta = itActual.getItemMeta();
+        itemMeta.setDisplayName(ChatColor.DARK_PURPLE + "Bordure");
+        itActual.setItemMeta(itemMeta);
+        menuInventory.setItem(16, itActual);
+
+        itActual = new ItemStack(Material.LEATHER_CHESTPLATE);
+        itemMeta = itActual.getItemMeta();
+        itemMeta.setDisplayName(ChatColor.YELLOW + "Inventaire de Départ");
+        itActual.setItemMeta(itemMeta);
         menuInventory.setItem(31, itActual);
+
     }
 
     private void setUpCommand(){
