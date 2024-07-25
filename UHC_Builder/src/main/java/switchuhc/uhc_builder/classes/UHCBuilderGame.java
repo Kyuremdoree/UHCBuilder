@@ -2,18 +2,28 @@ package switchuhc.uhc_builder.classes;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.java.Log;
 import org.bukkit.*;
+import org.bukkit.block.Skull;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.weather.WeatherChangeEvent;
+import org.bukkit.event.weather.WeatherEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import switchuhc.uhc_builder.UHC_Builder;
 import switchuhc.uhc_builder.tasks.StartTask;
 import switchuhc.uhc_builder.utilitaires.TimeConverter;
 import switchuhc.uhc_builder.utilitaires.Timer;
+
+import java.io.Console;
+import java.util.Map;
 
 public class UHCBuilderGame implements Listener {
     @Getter
@@ -24,6 +34,9 @@ public class UHCBuilderGame implements Listener {
 
     @Getter @Setter
     private Inventory pvpInventory;
+
+    @Getter @Setter
+    private Inventory enchantInventory;
 
     @Getter @Setter
     private Timer temps;
@@ -45,9 +58,11 @@ public class UHCBuilderGame implements Listener {
         this.main = main;
         borderInventory = Bukkit.createInventory(null, 9*5, ChatColor.DARK_PURPLE+"Paramètres de la Bordure");
         pvpInventory = Bukkit.createInventory(null, 9, ChatColor.DARK_PURPLE+"Paramètres du PvP");
+        enchantInventory = Bukkit.createInventory(null, 9*6,ChatColor.DARK_PURPLE+"Limite d'Enchantement");
         temps = new Timer(90*60, 20*60, 30);
         SetupBorderInventory();
         SetupPvPInventory();
+        SetupEnchantInventory();
     }
 
     public void Start(){
@@ -132,7 +147,8 @@ public class UHCBuilderGame implements Listener {
         ItemStack retour = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
         SkullMeta metaRetour = (SkullMeta) retour.getItemMeta();
         metaRetour.setDisplayName("§eRetour");
-        pvpInventory.setItem(0, retour);
+        retour.setItemMeta(metaRetour);
+        borderInventory.setItem(0, retour);
     }
 
     private void SetupPvPInventory(){
@@ -155,7 +171,7 @@ public class UHCBuilderGame implements Listener {
         metaPlus10.setDisplayName("§2+5m");
         metaPlus5.setDisplayName("§2+1m");
         metaPlus1.setDisplayName("§2+30s");
-        metaCompteur.setDisplayName("PvP : §b" + TimeConverter.ToString(TimeConverter.TimeConverteur(getTemps().getTempsBordure())));
+        metaCompteur.setDisplayName("PvP : §b" + TimeConverter.ToString(TimeConverter.TimeConverteur(getTemps().getTempsPVP())));
         metaMoins10.setDisplayName("§4-5m");
         metaMoins5.setDisplayName("§4-1m");
         metaMoins1.setDisplayName("§4-30s");
@@ -179,13 +195,61 @@ public class UHCBuilderGame implements Listener {
         ItemStack retour = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
         SkullMeta metaRetour = (SkullMeta) retour.getItemMeta();
         metaRetour.setDisplayName("§eRetour");
+        retour.setItemMeta(metaRetour);
         pvpInventory.setItem(0, retour);
+    }
+
+    private void SetupEnchantInventory() {
+        ItemStack ironSword = new ItemStack(Material.IRON_SWORD,1);
+
+        ItemStack bootIron = new ItemStack(Material.IRON_BOOTS,1);
+        ItemStack legginIron = new ItemStack(Material.IRON_LEGGINGS,1);
+        ItemStack chestplateIron = new ItemStack(Material.IRON_CHESTPLATE, 1);
+        ItemStack helmetIron = new ItemStack(Material.IRON_HELMET,1);
+
+        ItemStack diamandSword = new ItemStack(Material.DIAMOND_SWORD,1);
+
+        ItemStack bootDiamond = new ItemStack(Material.DIAMOND_BOOTS,1);
+        ItemStack legginDiamond = new ItemStack(Material.DIAMOND_LEGGINGS,1);
+        ItemStack chestplateDiamond = new ItemStack(Material.DIAMOND_CHESTPLATE, 1);
+        ItemStack helmetDiamand = new ItemStack(Material.DIAMOND_HELMET,1);
+
+        ItemStack arc = new ItemStack(Material.BOW,1);
+
+        ItemStack woodSword = new ItemStack(Material.WOOD_SWORD,1);
+
+        ItemStack fire = new ItemStack(Material.BLAZE_POWDER, 1);
+
+        enchantInventory.setItem(11,helmetIron);
+        enchantInventory.setItem(20,chestplateIron);
+        enchantInventory.setItem(29,legginIron);
+        enchantInventory.setItem(38,bootIron);
+        enchantInventory.setItem(19,ironSword);
+
+        enchantInventory.setItem(22,arc);
+        enchantInventory.setItem(31,woodSword);
+        enchantInventory.setItem(40, fire);
+
+        enchantInventory.setItem(15,helmetDiamand);
+        enchantInventory.setItem(24,chestplateDiamond);
+        enchantInventory.setItem(33,legginDiamond);
+        enchantInventory.setItem(42,bootDiamond);
+        enchantInventory.setItem(25,diamandSword);
+
+        ItemStack retour = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
+        SkullMeta metaRetour = (SkullMeta) retour.getItemMeta();
+        metaRetour.setDisplayName("§eRetour");
+        retour.setItemMeta(metaRetour);
+        enchantInventory.setItem(0, retour);
     }
 
     @EventHandler
     public void onClickSettingGame(InventoryClickEvent event){
+        if (event.getClickedInventory() == null) return;
         if(event.getClickedInventory().equals(borderInventory)){
             if(event.getCurrentItem() != null && event.getCurrentItem().hasItemMeta()){
+                Bukkit.broadcastMessage("Border entry :\n");
+                event.setCancelled(true);
                 switch (event.getCurrentItem().getItemMeta().getDisplayName()){
                     case "§2+10m":
                         getTemps().incrementBorder(10*60);
@@ -230,41 +294,123 @@ public class UHCBuilderGame implements Listener {
                         break;
                 }
                 String tmpBordure = TimeConverter.ToString(TimeConverter.TimeConverteur(getTemps().getTempsBordure()));
-                borderInventory.getItem(13).getItemMeta().setDisplayName("Border : §b" + tmpBordure);
-                borderInventory.getItem(31).getItemMeta().setDisplayName("Border : §b" + getBordureSize() + " blocks");
-                event.setCancelled(true);
+                Bukkit.broadcastMessage("new tmp : " + tmpBordure);
+                ItemMeta itTmp = borderInventory.getItem(13).getItemMeta();
+                itTmp.setDisplayName("Border : §b" + tmpBordure);
+                borderInventory.getItem(13).setItemMeta(itTmp);
+
+                itTmp = borderInventory.getItem(31).getItemMeta();
+                itTmp.setDisplayName("Border : §b" + getBordureSize() + " blocks");
+                borderInventory.getItem(31).setItemMeta(itTmp);
             }
         }
 
         if(event.getClickedInventory().equals(pvpInventory)){
             if(event.getCurrentItem() != null && event.getCurrentItem().hasItemMeta()) {
+                event.setCancelled(true);
                 switch (event.getCurrentItem().getItemMeta().getDisplayName()) {
                     case "§2+10m":
-                        getTemps().incrementBorder(10 * 60);
+                        getTemps().incrementPVP(10 * 60);
                         break;
                     case "§2+5m":
-                        getTemps().incrementBorder(5 * 60);
+                        getTemps().incrementPVP(5 * 60);
                         break;
                     case "§2+1m":
-                        getTemps().incrementBorder(60);
+                        getTemps().incrementPVP(60);
                         break;
                     case "§4-10m":
-                        getTemps().decrementBorder(10 * 60);
+                        getTemps().decrementPVP(10 * 60);
                         break;
                     case "§4-5m":
-                        getTemps().decrementBorder(5 * 60);
+                        getTemps().decrementPVP(5 * 60);
                         break;
                     case "§4-1m":
-                        getTemps().decrementBorder(60);
+                        getTemps().decrementPVP(60);
                         break;
                     case "§eRetour":
                         event.getWhoClicked().closeInventory();
                         event.getWhoClicked().openInventory(main.getMenuInventory());
                         break;
                 }
-                pvpInventory.getItem(4).getItemMeta().setDisplayName("PvP : §b" + TimeConverter.ToString(TimeConverter.TimeConverteur(getTemps().getTempsBordure())));
-                event.setCancelled(true);
+                ItemMeta itTmp = pvpInventory.getItem(4).getItemMeta();
+                itTmp.setDisplayName("PvP : §b" + TimeConverter.ToString(TimeConverter.TimeConverteur(getTemps().getTempsPVP())));
+                pvpInventory.getItem(4).setItemMeta(itTmp);
             }
         }
+        if(event.getClickedInventory().equals(enchantInventory)){
+            if(event.getCurrentItem() != null) {
+                event.setCancelled(true);
+                Map<Enchantment, Integer> enchantment;
+                switch (event.getCurrentItem().getType()){
+                    case IRON_SWORD:
+                    case DIAMOND_SWORD:
+                        enchantment = event.getCurrentItem().getEnchantments();
+
+                        if(enchantment.isEmpty()){
+                            event.getCurrentItem().addEnchantment(Enchantment.DAMAGE_ALL, 1);
+                        }
+                        else if(enchantment.get(Enchantment.DAMAGE_ALL) == 5){
+                            event.getCurrentItem().removeEnchantment(Enchantment.DAMAGE_ALL);
+                        }
+                        else
+                            event.getCurrentItem().addUnsafeEnchantment(Enchantment.DAMAGE_ALL, enchantment.get(Enchantment.DAMAGE_ALL) + 1);
+                        break;
+                    case DIAMOND_BOOTS:
+                    case DIAMOND_HELMET:
+                    case DIAMOND_CHESTPLATE:
+                    case DIAMOND_LEGGINGS:
+                    case IRON_BOOTS:
+                    case IRON_CHESTPLATE:
+                    case IRON_HELMET:
+                    case IRON_LEGGINGS:
+                        enchantment = event.getCurrentItem().getEnchantments();
+                        if(enchantment.isEmpty()){
+                            event.getCurrentItem().addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1);
+                        }
+                        else if(enchantment.get(Enchantment.PROTECTION_ENVIRONMENTAL) == 4){
+                            event.getCurrentItem().removeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL);
+                        }
+                        else event.getCurrentItem().addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, enchantment.get(Enchantment.PROTECTION_ENVIRONMENTAL) + 1);
+                        break;
+                    case BOW:
+                        enchantment = event.getCurrentItem().getEnchantments();
+                        if(enchantment.isEmpty()){
+                            event.getCurrentItem().addEnchantment(Enchantment.ARROW_DAMAGE, 1);
+                        }
+                        else if(enchantment.get(Enchantment.ARROW_DAMAGE) == 5){
+                            event.getCurrentItem().removeEnchantment(Enchantment.ARROW_DAMAGE);
+                        }
+                        else event.getCurrentItem().addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, enchantment.get(Enchantment.ARROW_DAMAGE) + 1);
+                        break;
+                    case WOOD_SWORD:
+                        enchantment = event.getCurrentItem().getEnchantments();
+                        if(enchantment.isEmpty()){
+                            event.getCurrentItem().addEnchantment(Enchantment.KNOCKBACK, 1);
+                        }
+                        else if(enchantment.get(Enchantment.KNOCKBACK) == 2){
+                            event.getCurrentItem().removeEnchantment(Enchantment.KNOCKBACK);
+                        }
+                        else event.getCurrentItem().addUnsafeEnchantment(Enchantment.KNOCKBACK, enchantment.get(Enchantment.KNOCKBACK) + 1);
+                        break;
+                    case BLAZE_POWDER:
+                        enchantment = event.getCurrentItem().getEnchantments();
+
+                        if(enchantment.isEmpty())
+                            event.getCurrentItem().addUnsafeEnchantment(Enchantment.FIRE_ASPECT,1);
+                        else event.getCurrentItem().removeEnchantment(Enchantment.FIRE_ASPECT);
+
+                        break;
+                    case SKULL_ITEM:
+                        event.getWhoClicked().closeInventory();
+                        event.getWhoClicked().openInventory(main.getMenuInventory());
+                        break;
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onWeather(WeatherChangeEvent event){
+        event.setCancelled(true);
     }
 }

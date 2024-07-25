@@ -17,9 +17,11 @@ public class MenuListener implements Listener {
 
     @EventHandler
     public void onMenuItemClick(InventoryClickEvent event) {
+        if (event.getClickedInventory() == null) return;
         if (main.getGameStatue() == GameStatue.Waiting && event.getClickedInventory().equals(main.getMenuInventory()))
         {
-            if (event.getCurrentItem() == null || !event.getCurrentItem().hasItemMeta()) {
+            event.setCancelled(true);
+            if (event.getCurrentItem() != null || !event.getCurrentItem().hasItemMeta()) {
                 switch (event.getCurrentItem().getType()) {
                     case SLIME_BALL:
                         event.getWhoClicked().closeInventory();
@@ -37,10 +39,13 @@ public class MenuListener implements Listener {
                         event.getWhoClicked().closeInventory();
                         event.getWhoClicked().openInventory(main.getStartInventory());
                         break;
+                    case ENCHANTED_BOOK:
+                        event.getWhoClicked().closeInventory();
+                        event.getWhoClicked().openInventory(main.getGame().getEnchantInventory());
+                        break;
                     default:
                         break;
                 }
-                event.setCancelled(true);
             }
         }
     }

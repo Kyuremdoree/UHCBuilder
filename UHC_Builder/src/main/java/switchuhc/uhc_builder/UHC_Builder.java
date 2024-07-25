@@ -20,6 +20,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 import switchuhc.uhc_builder.classes.UHCBuilderGame;
+import switchuhc.uhc_builder.listener.MenuListener;
 import switchuhc.uhc_builder.listener.PlayerListener;
 import switchuhc.uhc_builder.utilitaires.GameStatue;
 import switchuhc.uhc_builder.utilitaires.Timer;
@@ -69,6 +70,7 @@ public final class UHC_Builder extends JavaPlugin {
         scoreboardPacketContainer = new PacketContainer(PacketType.Play.Server.SCOREBOARD_OBJECTIVE);
         pm = getServer().getPluginManager();
         pm.registerEvents(new PlayerListener(this), this);
+        pm.registerEvents(new MenuListener(this), this);
 
         game = new UHCBuilderGame(this);
         pm.registerEvents(game, this);
@@ -109,6 +111,12 @@ public final class UHC_Builder extends JavaPlugin {
         itActual.setItemMeta(itemMeta);
         menuInventory.setItem(10, itActual);
 
+        itActual = new ItemStack(Material.ENCHANTED_BOOK);
+        itemMeta = itActual.getItemMeta();
+        itemMeta.setDisplayName(ChatColor.LIGHT_PURPLE + "Limite d'Enchant");
+        itActual.setItemMeta(itemMeta);
+        menuInventory.setItem(13, itActual);
+
         itActual = new ItemStack(Material.OBSIDIAN);
         itemMeta = itActual.getItemMeta();
         itemMeta.setDisplayName(ChatColor.DARK_PURPLE + "Bordure");
@@ -121,6 +129,10 @@ public final class UHC_Builder extends JavaPlugin {
         itActual.setItemMeta(itemMeta);
         menuInventory.setItem(31, itActual);
 
+    }
+
+    private void createStartInv(){
+        startInventory = Bukkit.createInventory(null,9*4, ChatColor.GOLD + "Inventaire de départ");
     }
 
     private void setUpCommand(){

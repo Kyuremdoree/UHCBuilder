@@ -40,11 +40,11 @@ public class Timer {
     }
 
     public void incrementPVP(int nb){
-        tempsPVP = tempsPVP + nb;
+        setTempsPVP(tempsPVP + nb);
     }
 
     public void incrementBorder(int nb){
-        tempsBordure= tempsBordure + nb;
+        setTempsBordure(tempsBordure + nb);
     }
 
     public void incrementInvul(int nb){
