@@ -20,6 +20,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 import switchuhc.uhc_builder.classes.UHCBuilderGame;
+import switchuhc.uhc_builder.command.HostCommand;
 import switchuhc.uhc_builder.listener.MenuListener;
 import switchuhc.uhc_builder.listener.PlayerListener;
 import switchuhc.uhc_builder.utilitaires.GameStatue;
@@ -71,6 +72,8 @@ public final class UHC_Builder extends JavaPlugin {
         pm = getServer().getPluginManager();
         pm.registerEvents(new PlayerListener(this), this);
         pm.registerEvents(new MenuListener(this), this);
+
+        getCommand("host").setExecutor((new HostCommand(this)));
 
         game = new UHCBuilderGame(this);
         pm.registerEvents(game, this);
@@ -127,7 +130,13 @@ public final class UHC_Builder extends JavaPlugin {
         itemMeta = itActual.getItemMeta();
         itemMeta.setDisplayName(ChatColor.YELLOW + "Inventaire de Départ");
         itActual.setItemMeta(itemMeta);
-        menuInventory.setItem(31, itActual);
+        menuInventory.setItem(33, itActual);
+
+        itActual = new ItemStack(Material.WATCH);
+        itemMeta = itActual.getItemMeta();
+        itemMeta.setDisplayName(ChatColor.DARK_BLUE + "Cycle Jour/Nuit");
+        itActual.setItemMeta(itemMeta);
+        menuInventory.setItem(29, itActual);
 
     }
 

@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -21,6 +22,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import switchuhc.uhc_builder.UHC_Builder;
 import switchuhc.uhc_builder.utilitaires.GameStatue;
+
+import java.util.Map;
 
 @Getter
 public class PlayerListener implements Listener {
@@ -42,7 +45,8 @@ public class PlayerListener implements Listener {
             case Waiting:
                 Inventory playerInv = player.getInventory();
                 playerInv.clear();
-                playerInv.setItem(4, main.getMenuItem());
+                if (player.isOp())
+                    playerInv.setItem(4, main.getMenuItem());
                 player.setFoodLevel(20);
                 break;
         }
@@ -159,7 +163,8 @@ public class PlayerListener implements Listener {
                             event.getWhoClicked().sendMessage(ChatColor.RED+("Fusion non Autorisé !"));
                             result.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, enchant.getEnchantmentLevel(Enchantment.DAMAGE_ALL));
                         }
-                        break;
+                    case GOLD_SWORD:
+                    case STONE_SWORD:
                     case WOOD_SWORD:
                         if (result.getEnchantments().isEmpty() || enchant.getEnchantments().isEmpty()) break;
                         else if (result.getEnchantments().get(Enchantment.KNOCKBACK) == null || enchant.getEnchantments().get(Enchantment.KNOCKBACK) == null) break;
@@ -188,6 +193,65 @@ public class PlayerListener implements Listener {
             }
         }
     }
+
+    @EventHandler
+    public void PlayerEnchant(EnchantItemEvent event){
+        ItemStack result = event.getItem();
+        ItemStack enchant = findItemMetaByMaterial(main.getGame().getEnchantInventory(), result.getType());
+        if (enchant == null) return;
+        switch (result.getType()){
+            case DIAMOND_BOOTS:
+            case DIAMOND_HELMET:
+            case DIAMOND_CHESTPLATE:
+            case DIAMOND_LEGGINGS:
+            case IRON_BOOTS:
+            case IRON_CHESTPLATE:
+            case IRON_HELMET:
+            case IRON_LEGGINGS:
+                if (enchant.getEnchantments().isEmpty()) break;
+                else if (enchant.getEnchantments().get(Enchantment.PROTECTION_ENVIRONMENTAL) == null) break;
+                else if (event.getEnchantsToAdd().get(Enchantment.PROTECTION_ENVIRONMENTAL) > enchant.getEnchantments().get(Enchantment.PROTECTION_ENVIRONMENTAL)){
+                    event.getEnchanter().sendMessage(ChatColor.RED+("Enchantement non Autorisé !"));
+                    result.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, enchant.getEnchantmentLevel(Enchantment.PROTECTION_ENVIRONMENTAL));
+                }
+                break;
+            case IRON_SWORD:
+            case DIAMOND_SWORD:
+                if (enchant.getEnchantments().isEmpty()) break;
+                else if (enchant.getEnchantments().get(Enchantment.DAMAGE_ALL) == null) break;
+                else if (event.getEnchantsToAdd().get(Enchantment.DAMAGE_ALL) > enchant.getEnchantments().get(Enchantment.DAMAGE_ALL)){
+                    event.getEnchanter().sendMessage(ChatColor.RED+("Enchantement non Autorisé !"));
+                    result.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, enchant.getEnchantmentLevel(Enchantment.DAMAGE_ALL));
+                }
+            case GOLD_SWORD:
+            case STONE_SWORD:
+            case WOOD_SWORD:
+                if (enchant.getEnchantments().isEmpty()) break;
+                else if (enchant.getEnchantments().get(Enchantment.KNOCKBACK) == null) break;
+                else if (event.getEnchantsToAdd().get(Enchantment.KNOCKBACK) > enchant.getEnchantments().get(Enchantment.KNOCKBACK)){
+                    event.getEnchanter().sendMessage(ChatColor.RED+("Enchantement non Autorisé !"));
+                    result.addUnsafeEnchantment(Enchantment.KNOCKBACK, enchant.getEnchantmentLevel(Enchantment.KNOCKBACK));
+                }
+                break;
+            case BOW:
+                if (enchant.getEnchantments().isEmpty()) break;
+                else if (enchant.getEnchantments().get(Enchantment.ARROW_DAMAGE) == null) break;
+                else if (event.getEnchantsToAdd().get(Enchantment.ARROW_DAMAGE) > enchant.getEnchantments().get(Enchantment.ARROW_DAMAGE)){
+                    event.getEnchanter().sendMessage(ChatColor.RED+("Enchantement non Autorisé !"));
+                    result.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, enchant.getEnchantmentLevel(Enchantment.ARROW_DAMAGE));
+                }
+                break;
+            case BLAZE_POWDER:
+                if (enchant.getEnchantments().isEmpty()) break;
+                else if (enchant.getEnchantments().get(Enchantment.KNOCKBACK) == null) break;
+                else if (event.getEnchantsToAdd().get(Enchantment.FIRE_ASPECT) > enchant.getEnchantments().get(Enchantment.KNOCKBACK)){
+                    event.getEnchanter().sendMessage(ChatColor.RED+("Enchantement non Autorisé !"));
+                    result.addUnsafeEnchantment(Enchantment.FIRE_ASPECT, enchant.getEnchantmentLevel(Enchantment.FIRE_ASPECT));
+                }
+                break;
+        }
+    }
+
 
     private ItemStack findItemMetaByMaterial(Inventory inventory, Material material) {
         for (ItemStack item : inventory.getContents()) {

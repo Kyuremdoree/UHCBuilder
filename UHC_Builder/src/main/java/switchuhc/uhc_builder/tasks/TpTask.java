@@ -27,6 +27,8 @@ public class TpTask extends BukkitRunnable implements Listener {
             Bukkit.broadcastMessage("La partie COMMENCE !");
             GameTask task = new GameTask(this.main);
             task.runTaskTimer(this.main,0,20);
+            DayNightCycleTask task1 = new DayNightCycleTask(this.main);
+            task1.runTaskTimer(this.main, 0,1);
         }
         timer--;
     }

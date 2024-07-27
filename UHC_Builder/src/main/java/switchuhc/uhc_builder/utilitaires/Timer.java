@@ -17,6 +17,9 @@ public class Timer {
     @Getter
     private int tempsPVP;
 
+    @Getter @Setter
+    private int cycleDayNight;
+
     public void setTempsBordure(int tempsBordure) {
         if(tempsBordure >= tempsPVP)
             this.tempsBordure = tempsBordure;

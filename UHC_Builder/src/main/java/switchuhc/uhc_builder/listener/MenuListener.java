@@ -1,6 +1,8 @@
 package switchuhc.uhc_builder.listener;
 
 import lombok.Getter;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -18,6 +20,14 @@ public class MenuListener implements Listener {
     @EventHandler
     public void onMenuItemClick(InventoryClickEvent event) {
         if (event.getClickedInventory() == null) return;
+        if (event.getClickedInventory() == event.getWhoClicked().getInventory()){
+            if (event.getCurrentItem() != null && event.getCurrentItem().hasItemMeta() && event.getCurrentItem().getType() == Material.COMMAND && event.getCurrentItem().getItemMeta().getDisplayName().equals(ChatColor.AQUA + "Menu")){
+                event.setCancelled(true);
+                event.getWhoClicked().closeInventory();
+                event.getWhoClicked().openInventory(main.getMenuInventory());
+                return;
+            }
+        }
         if (main.getGameStatue() == GameStatue.Waiting && event.getClickedInventory().equals(main.getMenuInventory()))
         {
             event.setCancelled(true);
@@ -43,9 +53,13 @@ public class MenuListener implements Listener {
                         event.getWhoClicked().closeInventory();
                         event.getWhoClicked().openInventory(main.getGame().getEnchantInventory());
                         break;
+                    case WATCH:
+                        event.getWhoClicked().closeInventory();
+                        event.getWhoClicked().openInventory(main.getGame().getCycleInventory());
                     default:
                         break;
                 }
+                return;
             }
         }
     }

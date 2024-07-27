@@ -20,14 +20,12 @@ public class GameTask extends BukkitRunnable {
 
     @Override
     public void run() {
-        if (main.getGame().getTemps().getTempsActuel()%(20*60) != main.getGame().getNbJour()){
-            NewDay();
-        }
         for (Player p : Bukkit.getOnlinePlayers()) {
             //main.updateScoreBoard(p);
         }
         if (main.getGame().getTemps().getTempsActuel() == 0) {
             Bukkit.broadcastMessage("§eVous êtes invunérable aux dégats pendant 30 seconde !");
+
         }
         if (main.getGame().getTemps().getTempsActuel() == 30) {
             Bukkit.broadcastMessage("§4Vous êtes vunérable au dégat !");
@@ -105,6 +103,10 @@ public class GameTask extends BukkitRunnable {
             cancel();
         }
 
+        if(main.getGame().getTemps().getTempsActuel() % (60*20) == 0 ){
+            main.getGame().setNbJour((int)(main.getGame().getTemps().getTempsActuel() / (60*20)));
+        }
+
         Evenement(main.getGame().getTemps().getTempsActuel());
 
         main.getGame().getTemps().incrementActuel(1);
@@ -116,8 +118,4 @@ public class GameTask extends BukkitRunnable {
     }
 
     public void Evenement(int tempsActuel){};
-
-    public void NewDay(){
-        main.getGame().setNbJour(main.getGame().getNbJour() + 1);
-    }
 }

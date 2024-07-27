@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.event.weather.WeatherEvent;
 import org.bukkit.inventory.Inventory;
@@ -19,6 +20,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import switchuhc.uhc_builder.UHC_Builder;
 import switchuhc.uhc_builder.tasks.StartTask;
+import switchuhc.uhc_builder.utilitaires.Cycle;
 import switchuhc.uhc_builder.utilitaires.TimeConverter;
 import switchuhc.uhc_builder.utilitaires.Timer;
 
@@ -39,6 +41,9 @@ public class UHCBuilderGame implements Listener {
     private Inventory enchantInventory;
 
     @Getter @Setter
+    private Inventory cycleInventory;
+
+    @Getter @Setter
     private Timer temps;
 
     @Getter @Setter
@@ -46,6 +51,9 @@ public class UHCBuilderGame implements Listener {
 
     @Getter @Setter
     private int nbJour = 1;
+
+    @Getter @Setter
+    private Cycle cycle;
 
     @Getter
     private int BordureSize = 1000;
@@ -59,10 +67,13 @@ public class UHCBuilderGame implements Listener {
         borderInventory = Bukkit.createInventory(null, 9*5, ChatColor.DARK_PURPLE+"Paramètres de la Bordure");
         pvpInventory = Bukkit.createInventory(null, 9, ChatColor.DARK_PURPLE+"Paramètres du PvP");
         enchantInventory = Bukkit.createInventory(null, 9*6,ChatColor.DARK_PURPLE+"Limite d'Enchantement");
+        cycleInventory = Bukkit.createInventory(null, 9, ChatColor.DARK_BLUE+"Paramètres du Cycle Jour/Nuit");
         temps = new Timer(90*60, 20*60, 30);
+        temps.setCycleDayNight(10*60);
         SetupBorderInventory();
         SetupPvPInventory();
         SetupEnchantInventory();
+        SetupCycleInventory();
     }
 
     public void Start(){
@@ -199,6 +210,54 @@ public class UHCBuilderGame implements Listener {
         pvpInventory.setItem(0, retour);
     }
 
+    private void SetupCycleInventory(){
+        ItemStack plus10 = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
+        ItemStack plus5 = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
+        ItemStack plus1 = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
+        ItemStack compteur = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
+        ItemStack moins10 = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
+        ItemStack moins5 = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
+        ItemStack moins1 = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
+
+        SkullMeta metaPlus10 = (SkullMeta) plus10.getItemMeta();
+        SkullMeta metaPlus5 = (SkullMeta) plus5.getItemMeta();
+        SkullMeta metaPlus1 = (SkullMeta) plus1.getItemMeta();
+        SkullMeta metaCompteur = (SkullMeta) compteur.getItemMeta();
+        SkullMeta metaMoins10 = (SkullMeta) moins10.getItemMeta();
+        SkullMeta metaMoins5 = (SkullMeta) moins5.getItemMeta();
+        SkullMeta metaMoins1 = (SkullMeta) moins1.getItemMeta();
+
+        metaPlus10.setDisplayName("§4-5m");
+        metaPlus5.setDisplayName("§4-1m");
+        metaPlus1.setDisplayName("§4-30s");
+        metaCompteur.setDisplayName("Cycle Jour/Nuit : §b" + TimeConverter.ToString(TimeConverter.TimeConverteur(getTemps().getCycleDayNight())));
+        metaMoins10.setDisplayName("§2+5m");
+        metaMoins5.setDisplayName("§2+1m");
+        metaMoins1.setDisplayName("§2+30s");
+
+        plus10.setItemMeta(metaPlus10);
+        plus5.setItemMeta(metaPlus5);
+        plus1.setItemMeta(metaPlus1);
+        compteur.setItemMeta(metaCompteur);
+        moins10.setItemMeta(metaMoins10);
+        moins5.setItemMeta(metaMoins5);
+        moins1.setItemMeta(metaMoins1);
+
+        cycleInventory.setItem(1, plus10);
+        cycleInventory.setItem(2, plus5);
+        cycleInventory.setItem(3, plus1);
+        cycleInventory.setItem(4, compteur);
+        cycleInventory.setItem(5, moins1);
+        cycleInventory.setItem(6, moins5);
+        cycleInventory.setItem(7, moins10);
+
+        ItemStack retour = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
+        SkullMeta metaRetour = (SkullMeta) retour.getItemMeta();
+        metaRetour.setDisplayName("§eRetour");
+        retour.setItemMeta(metaRetour);
+        cycleInventory.setItem(0, retour);
+    }
+
     private void SetupEnchantInventory() {
         ItemStack ironSword = new ItemStack(Material.IRON_SWORD,1);
 
@@ -244,27 +303,27 @@ public class UHCBuilderGame implements Listener {
     }
 
     @EventHandler
-    public void onClickSettingGame(InventoryClickEvent event){
+    public void onClickSettingGame(InventoryClickEvent event) {
         if (event.getClickedInventory() == null) return;
-        if(event.getClickedInventory().equals(borderInventory)){
-            if(event.getCurrentItem() != null && event.getCurrentItem().hasItemMeta()){
+        if (event.getClickedInventory().equals(borderInventory)) {
+            if (event.getCurrentItem() != null && event.getCurrentItem().hasItemMeta()) {
                 Bukkit.broadcastMessage("Border entry :\n");
                 event.setCancelled(true);
-                switch (event.getCurrentItem().getItemMeta().getDisplayName()){
+                switch (event.getCurrentItem().getItemMeta().getDisplayName()) {
                     case "§2+10m":
-                        getTemps().incrementBorder(10*60);
+                        getTemps().incrementBorder(10 * 60);
                         break;
                     case "§2+5m":
-                        getTemps().incrementBorder(5*60);
+                        getTemps().incrementBorder(5 * 60);
                         break;
                     case "§2+1m":
                         getTemps().incrementBorder(60);
                         break;
                     case "§4-10m":
-                        getTemps().decrementBorder(10*60);
+                        getTemps().decrementBorder(10 * 60);
                         break;
                     case "§4-5m":
-                        getTemps().decrementBorder(5*60);
+                        getTemps().decrementBorder(5 * 60);
                         break;
                     case "§4-1m":
                         getTemps().decrementBorder(60);
@@ -305,27 +364,27 @@ public class UHCBuilderGame implements Listener {
             }
         }
 
-        if(event.getClickedInventory().equals(pvpInventory)){
-            if(event.getCurrentItem() != null && event.getCurrentItem().hasItemMeta()) {
+        if (event.getClickedInventory().equals(pvpInventory)) {
+            if (event.getCurrentItem() != null && event.getCurrentItem().hasItemMeta()) {
                 event.setCancelled(true);
                 switch (event.getCurrentItem().getItemMeta().getDisplayName()) {
-                    case "§2+10m":
-                        getTemps().incrementPVP(10 * 60);
-                        break;
                     case "§2+5m":
                         getTemps().incrementPVP(5 * 60);
                         break;
                     case "§2+1m":
                         getTemps().incrementPVP(60);
                         break;
-                    case "§4-10m":
-                        getTemps().decrementPVP(10 * 60);
+                    case "§2+30s":
+                        getTemps().incrementPVP(30);
                         break;
                     case "§4-5m":
                         getTemps().decrementPVP(5 * 60);
                         break;
                     case "§4-1m":
                         getTemps().decrementPVP(60);
+                        break;
+                    case "§4-30s":
+                        getTemps().decrementPVP(30);
                         break;
                     case "§eRetour":
                         event.getWhoClicked().closeInventory();
@@ -337,78 +396,114 @@ public class UHCBuilderGame implements Listener {
                 pvpInventory.getItem(4).setItemMeta(itTmp);
             }
         }
-        if(event.getClickedInventory().equals(enchantInventory)){
-            if(event.getCurrentItem() != null) {
+        if (event.getClickedInventory().equals(enchantInventory)) {
+                if (event.getCurrentItem() != null) {
+                    event.setCancelled(true);
+                    Map<Enchantment, Integer> enchantment;
+                    switch (event.getCurrentItem().getType()) {
+                        case IRON_SWORD:
+                        case DIAMOND_SWORD:
+                            enchantment = event.getCurrentItem().getEnchantments();
+
+                            if (enchantment.isEmpty()) {
+                                event.getCurrentItem().addEnchantment(Enchantment.DAMAGE_ALL, 1);
+                            } else if (enchantment.get(Enchantment.DAMAGE_ALL) == 5) {
+                                event.getCurrentItem().removeEnchantment(Enchantment.DAMAGE_ALL);
+                            } else
+                                event.getCurrentItem().addUnsafeEnchantment(Enchantment.DAMAGE_ALL, enchantment.get(Enchantment.DAMAGE_ALL) + 1);
+                            break;
+                        case DIAMOND_BOOTS:
+                        case DIAMOND_HELMET:
+                        case DIAMOND_CHESTPLATE:
+                        case DIAMOND_LEGGINGS:
+                        case IRON_BOOTS:
+                        case IRON_CHESTPLATE:
+                        case IRON_HELMET:
+                        case IRON_LEGGINGS:
+                            enchantment = event.getCurrentItem().getEnchantments();
+                            if (enchantment.isEmpty()) {
+                                event.getCurrentItem().addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1);
+                            } else if (enchantment.get(Enchantment.PROTECTION_ENVIRONMENTAL) == 4) {
+                                event.getCurrentItem().removeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL);
+                            } else
+                                event.getCurrentItem().addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, enchantment.get(Enchantment.PROTECTION_ENVIRONMENTAL) + 1);
+                            break;
+                        case BOW:
+                            enchantment = event.getCurrentItem().getEnchantments();
+                            if (enchantment.isEmpty()) {
+                                event.getCurrentItem().addEnchantment(Enchantment.ARROW_DAMAGE, 1);
+                            } else if (enchantment.get(Enchantment.ARROW_DAMAGE) == 5) {
+                                event.getCurrentItem().removeEnchantment(Enchantment.ARROW_DAMAGE);
+                            } else
+                                event.getCurrentItem().addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, enchantment.get(Enchantment.ARROW_DAMAGE) + 1);
+                            break;
+                        case WOOD_SWORD:
+                            enchantment = event.getCurrentItem().getEnchantments();
+                            if (enchantment.isEmpty()) {
+                                event.getCurrentItem().addEnchantment(Enchantment.KNOCKBACK, 1);
+                            } else if (enchantment.get(Enchantment.KNOCKBACK) == 2) {
+                                event.getCurrentItem().removeEnchantment(Enchantment.KNOCKBACK);
+                            } else
+                                event.getCurrentItem().addUnsafeEnchantment(Enchantment.KNOCKBACK, enchantment.get(Enchantment.KNOCKBACK) + 1);
+                            break;
+                        case BLAZE_POWDER:
+                            enchantment = event.getCurrentItem().getEnchantments();
+
+                            if (enchantment.isEmpty())
+                                event.getCurrentItem().addUnsafeEnchantment(Enchantment.FIRE_ASPECT, 1);
+                            else event.getCurrentItem().removeEnchantment(Enchantment.FIRE_ASPECT);
+
+                            break;
+                        case SKULL_ITEM:
+                            event.getWhoClicked().closeInventory();
+                            event.getWhoClicked().openInventory(main.getMenuInventory());
+                            break;
+                    }
+                }
+            }
+        if (event.getClickedInventory().equals(cycleInventory)) {
+            if (event.getCurrentItem() != null && event.getCurrentItem().hasItemMeta()) {
                 event.setCancelled(true);
-                Map<Enchantment, Integer> enchantment;
-                switch (event.getCurrentItem().getType()){
-                    case IRON_SWORD:
-                    case DIAMOND_SWORD:
-                        enchantment = event.getCurrentItem().getEnchantments();
-
-                        if(enchantment.isEmpty()){
-                            event.getCurrentItem().addEnchantment(Enchantment.DAMAGE_ALL, 1);
-                        }
-                        else if(enchantment.get(Enchantment.DAMAGE_ALL) == 5){
-                            event.getCurrentItem().removeEnchantment(Enchantment.DAMAGE_ALL);
-                        }
-                        else
-                            event.getCurrentItem().addUnsafeEnchantment(Enchantment.DAMAGE_ALL, enchantment.get(Enchantment.DAMAGE_ALL) + 1);
+                switch (event.getCurrentItem().getItemMeta().getDisplayName()) {
+                    case "§2+5m":
+                        getTemps().setCycleDayNight(getTemps().getCycleDayNight() + (5 * 60));
                         break;
-                    case DIAMOND_BOOTS:
-                    case DIAMOND_HELMET:
-                    case DIAMOND_CHESTPLATE:
-                    case DIAMOND_LEGGINGS:
-                    case IRON_BOOTS:
-                    case IRON_CHESTPLATE:
-                    case IRON_HELMET:
-                    case IRON_LEGGINGS:
-                        enchantment = event.getCurrentItem().getEnchantments();
-                        if(enchantment.isEmpty()){
-                            event.getCurrentItem().addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1);
-                        }
-                        else if(enchantment.get(Enchantment.PROTECTION_ENVIRONMENTAL) == 4){
-                            event.getCurrentItem().removeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL);
-                        }
-                        else event.getCurrentItem().addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, enchantment.get(Enchantment.PROTECTION_ENVIRONMENTAL) + 1);
+                    case "§2+1m":
+                        getTemps().setCycleDayNight(getTemps().getCycleDayNight() + 60);
                         break;
-                    case BOW:
-                        enchantment = event.getCurrentItem().getEnchantments();
-                        if(enchantment.isEmpty()){
-                            event.getCurrentItem().addEnchantment(Enchantment.ARROW_DAMAGE, 1);
-                        }
-                        else if(enchantment.get(Enchantment.ARROW_DAMAGE) == 5){
-                            event.getCurrentItem().removeEnchantment(Enchantment.ARROW_DAMAGE);
-                        }
-                        else event.getCurrentItem().addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, enchantment.get(Enchantment.ARROW_DAMAGE) + 1);
+                    case "§2+30s":
+                        getTemps().setCycleDayNight(getTemps().getCycleDayNight() + 30);
                         break;
-                    case WOOD_SWORD:
-                        enchantment = event.getCurrentItem().getEnchantments();
-                        if(enchantment.isEmpty()){
-                            event.getCurrentItem().addEnchantment(Enchantment.KNOCKBACK, 1);
-                        }
-                        else if(enchantment.get(Enchantment.KNOCKBACK) == 2){
-                            event.getCurrentItem().removeEnchantment(Enchantment.KNOCKBACK);
-                        }
-                        else event.getCurrentItem().addUnsafeEnchantment(Enchantment.KNOCKBACK, enchantment.get(Enchantment.KNOCKBACK) + 1);
+                    case "§4-5m":
+                        getTemps().setCycleDayNight(getTemps().getCycleDayNight() - (5 * 60));
                         break;
-                    case BLAZE_POWDER:
-                        enchantment = event.getCurrentItem().getEnchantments();
-
-                        if(enchantment.isEmpty())
-                            event.getCurrentItem().addUnsafeEnchantment(Enchantment.FIRE_ASPECT,1);
-                        else event.getCurrentItem().removeEnchantment(Enchantment.FIRE_ASPECT);
-
+                    case "§4-1m":
+                        getTemps().setCycleDayNight(getTemps().getCycleDayNight() - 60);
                         break;
-                    case SKULL_ITEM:
+                    case "§4-30s":
+                        getTemps().setCycleDayNight(getTemps().getCycleDayNight() - 30);
+                        break;
+                    case "§eRetour":
                         event.getWhoClicked().closeInventory();
                         event.getWhoClicked().openInventory(main.getMenuInventory());
                         break;
                 }
+                ItemMeta itTmp = cycleInventory.getItem(4).getItemMeta();
+                itTmp.setDisplayName("Cycle Jour/Nuit : §b" + TimeConverter.ToString(TimeConverter.TimeConverteur(getTemps().getCycleDayNight())));
+                cycleInventory.getItem(4).setItemMeta(itTmp);
             }
         }
     }
 
+
+    @EventHandler
+    public void onPlayerDropItem(PlayerDropItemEvent event){
+        if (event.getItemDrop() == null) return;
+        if (event.getItemDrop().getItemStack().getType().equals(Material.COMMAND)) {
+            event.setCancelled(true);
+        }
+        event.setCancelled(true);
+    }
     @EventHandler
     public void onWeather(WeatherChangeEvent event){
         event.setCancelled(true);

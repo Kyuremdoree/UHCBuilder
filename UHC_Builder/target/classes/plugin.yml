@@ -1,4 +1,7 @@
 name: UHC_Builder
-version: '1.0'
+version: 1.0.0
 main: switchuhc.uhc_builder.UHC_Builder
 depend: [ProtocolLib]
+commands:
+  host:
+    description: permet d'effectuer les commandes par l'host
