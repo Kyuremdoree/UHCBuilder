@@ -18,12 +18,15 @@ public class DayNightCycleTask extends BukkitRunnable {
     long dayStart = 0;
     long nightStart;
 
+    long addition;
+
     public DayNightCycleTask(UHC_Builder pl) {
         main = pl;
-        dayDuration = main.getGame().getTemps().getCycleDayNight();
+        dayDuration = (long) main.getGame().getTemps().getCycleDayNight() * 20;
         nightDuration = dayDuration;
         nightStart = nightDuration;
         fullCycleDuration = (long) (dayDuration + nightDuration);
+        addition = 24000 / fullCycleDuration;
     }
     long currentTick = 0;
     World world = Bukkit.getWorld("world");
@@ -38,9 +41,9 @@ public class DayNightCycleTask extends BukkitRunnable {
             Bukkit.broadcastMessage(ChatColor.GOLD+"Le jour se lève !");
             main.getGame().setCycle(Cycle.Day);
         } else if (currentTick % fullCycleDuration == nightStart) {
-            Bukkit.broadcastMessage(ChatColor.GOLD+"Le jour se lève !");
-            main.getGame().setCycle(Cycle.Day);
+            Bukkit.broadcastMessage(ChatColor.BLUE +"Le soleil se couche et la nuit se lève !");
+            main.getGame().setCycle(Cycle.Night);
         }
-        currentTick = (currentTick + 1) % fullCycleDuration;
+        currentTick = (currentTick + addition) % fullCycleDuration;
     }
 }

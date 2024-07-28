@@ -40,6 +40,7 @@ public class StartTask extends BukkitRunnable {
                 p.setHealth(20);
                 p.setFoodLevel(20);
                 p.setExp(0);
+                p.setLevel(0);
                 p.setGameMode(GameMode.SURVIVAL);
                 Spawn = new Location(Bukkit.getWorld("world"), random.nextInt(2 * main.getGame().getBordureSize() + 1) - main.getGame().getBordureSize(), 100, random.nextInt(2 * main.getGame().getBordureSize() + 1) - main.getGame().getBordureSize());
                 p.teleport(Spawn);

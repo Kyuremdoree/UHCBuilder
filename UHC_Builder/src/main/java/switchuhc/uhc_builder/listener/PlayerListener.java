@@ -3,6 +3,7 @@ package switchuhc.uhc_builder.listener;
 import lombok.Getter;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,15 +16,15 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import switchuhc.uhc_builder.UHC_Builder;
-import switchuhc.uhc_builder.utilitaires.GameStatue;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 public class PlayerListener implements Listener {
@@ -37,17 +38,70 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onJoin (PlayerJoinEvent event){
         Player player = event.getPlayer();
-        event.setJoinMessage(ChatColor.BLUE + player.getName() +" vient de se connecter !\n");
-        main.getPlayerList().add(player);
-        Bukkit.getLogger().info("[UHC BUILDER] Player Connected");
-        Bukkit.broadcastMessage(player.toString());
+        player.setScoreboard(main.getGame().getCustomScoreboard().getScoreboard());
+        main.getGame().getCustomScoreboard().updateScoreBoardKills(player);
         switch (main.getGameStatue()){
+            case Teleportation:
+            case Starting:
             case Waiting:
+                event.setJoinMessage(ChatColor.BLUE + player.getName() +" vient de se connecter !\n");
+                Bukkit.getLogger().info("[UHC BUILDER] Player Connected");
+                Bukkit.broadcastMessage(player.toString());
+                main.getPlayerList().add(player);
+                main.getPlayerInGameList().add(player.getUniqueId());
                 Inventory playerInv = player.getInventory();
                 playerInv.clear();
-                if (player.isOp())
+                if (player.isOp()){
                     playerInv.setItem(4, main.getMenuItem());
+                    player.setGameMode(GameMode.CREATIVE);
+                }
+                else player.setGameMode(GameMode.SURVIVAL);
                 player.setFoodLevel(20);
+                player.setExp(0);
+                main.getGame().getCustomScoreboard().updateScoreBoardNbPlayer();
+
+                break;
+            case Mining:
+            case Meetup:
+            case Lategame:
+            case Terminated:
+                if (main.getPlayerInGameList().contains(player.getUniqueId())){
+                    event.setJoinMessage(ChatColor.BLUE + player.getName() +" vient de se connecter !\n");
+                    Bukkit.getLogger().info("[UHC BUILDER] Player Connected");
+                    Bukkit.broadcastMessage(player.toString());
+                    main.getPlayerList().add(player);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    @EventHandler
+    public void onDisconnect(PlayerQuitEvent event){
+        Player player = event.getPlayer();
+        switch (main.getGameStatue()){
+            case Teleportation:
+            case Starting:
+            case Waiting:
+                main.getPlayerInGameList().remove(player.getUniqueId());
+                main.getPlayerList().remove(player);
+                event.setQuitMessage(ChatColor.BLUE + player.getName() +" vient de se déconnecter !\n");
+                Bukkit.getLogger().info("[UHC BUILDER] Player disconnected");
+                Bukkit.broadcastMessage(player.toString());
+                main.getGame().getCustomScoreboard().updateScoreBoardNbPlayer();
+                break;
+            case Mining:
+            case Meetup:
+            case Lategame:
+            case Terminated:
+                if (main.getPlayerInGameList().contains(player.getUniqueId())){
+                    main.getPlayerList().remove(player);
+                    event.setQuitMessage(ChatColor.BLUE + player.getName() +" vient de se déconnecter !\n");
+                    Bukkit.getLogger().info("[UHC BUILDER] Player disconnected");
+                    Bukkit.broadcastMessage(player.toString());
+                    main.getGame().getCustomScoreboard().updateScoreBoardNbPlayer();
+                }
                 break;
         }
     }
@@ -78,55 +132,66 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void NoFood(FoodLevelChangeEvent event){
-        if (main.getGameStatue().ordinal() <= 3){
+        if (main.getGameStatue().ordinal() < 3){
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void playerDie(PlayerDeathEvent event){
-        if (main.getGameStatue().ordinal() < 4){
-            Player player = event.getEntity();
+        Player player = event.getEntity();
+        if (main.getGameStatue().ordinal() < 4) {
+            Location loc = player.getLocation();
+
             event.setKeepInventory(true);
             event.setKeepLevel(true);
             event.getDrops().clear();
             event.setDroppedExp(0);
-            Location loc = player.getLocation();
-            player.setGameMode(GameMode.SPECTATOR);
 
-            Bukkit.getScheduler().runTaskTimer(main, new BukkitRunnable() {
-                private int timer = 5;
-
+            Bukkit.getScheduler().runTaskLater(main, new BukkitRunnable() {
                 @Override
-                public void run()
-                {
-                    if(timer == 0){
-                        cancel();
-                        player.setHealth(player.getMaxHealth());
-                        player.teleport(loc);
-                        player.setGameMode(GameMode.SURVIVAL);
-                        player.setHealth(player.getMaxHealth());
-
-                        Bukkit.getScheduler().runTaskTimer(main, new BukkitRunnable() {
-                            private int timer = 5;
-
-                            @Override
-                            public void run()
-                            {
-                                player.setNoDamageTicks(200);
-                                if(timer == 0){
-                                    player.setNoDamageTicks(0);
-                                    event.setKeepInventory(false);
-                                    event.setKeepLevel(false);
-                                    cancel();
-                                }
-                                else timer--;
-                            }
-                        }, 0, 20);
-                    }
-                    else timer--;
+                public void run() {
+                    player.spigot().respawn();
+                    player.setGameMode(GameMode.SPECTATOR);
+                    Bukkit.getScheduler().runTaskLater(main, new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            player.teleport(loc);
+                            player.setHealth(player.getMaxHealth());
+                            player.setGameMode(GameMode.SURVIVAL);
+                            player.setNoDamageTicks(200);
+                            player.sendMessage(ChatColor.GREEN + "Vous avez été ressuscité !");
+                        }
+                    }, 5 * 20L); // 5 secondes en ticks
                 }
-            }, 0, 20);
+            }, 20L);
+        }
+        else if (event.getEntity().getKiller() != null && event.getEntity().getKiller() instanceof Player){
+            main.getGame().getCustomScoreboard().updateScoreBoardKills(event.getEntity().getKiller());
+
+            Location loc = player.getLocation();
+
+            List<ItemStack> drop = new ArrayList<>(event.getDrops());
+            int Exp = event.getDroppedExp();
+
+            event.getDrops().clear();
+            event.setDroppedExp(0);
+
+            Bukkit.getScheduler().runTaskLater(main, new BukkitRunnable() {
+                @Override
+                public void run() {
+                    player.spigot().respawn();
+                    player.setGameMode(GameMode.SPECTATOR);
+                    Bukkit.getScheduler().runTaskLater(main, new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            player.teleport(loc);
+                            drop.forEach(item -> Bukkit.getWorld("world").dropItem(loc, item));
+                            Bukkit.getWorld("world").spawn(loc, ExperienceOrb.class).setExperience(Exp);
+                        }
+                    }, 5 * 20L);
+                }
+            }, 20L);
         }
     }
 

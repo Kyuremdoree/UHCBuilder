@@ -29,11 +29,16 @@ import switchuhc.uhc_builder.utilitaires.Timer;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public final class UHC_Builder extends JavaPlugin {
+    private UHC_Builder main = this;
 
     @Getter @Setter
     private List<Player> playerList;
+
+    @Getter @Setter
+    private List<UUID> playerInGameList;
 
     @Getter @Setter
     private ProtocolManager protocolMgr;
@@ -60,7 +65,7 @@ public final class UHC_Builder extends JavaPlugin {
     private UHCBuilderGame game;
 
     @Getter @Setter
-    public Scoreboard scoreboard;
+    private String gameTitle = "UHC BUILDER";
 
     @Override
     public void onEnable() {
@@ -70,20 +75,22 @@ public final class UHC_Builder extends JavaPlugin {
         gameStatue = GameStatue.Waiting;
         scoreboardPacketContainer = new PacketContainer(PacketType.Play.Server.SCOREBOARD_OBJECTIVE);
         pm = getServer().getPluginManager();
-        pm.registerEvents(new PlayerListener(this), this);
-        pm.registerEvents(new MenuListener(this), this);
+        pm.registerEvents(new PlayerListener(main), main);
+        pm.registerEvents(new MenuListener(main), main);
 
-        getCommand("host").setExecutor((new HostCommand(this)));
-
-        game = new UHCBuilderGame(this);
-        pm.registerEvents(game, this);
+        getCommand("host").setExecutor((new HostCommand(main)));
 
         playerList = new ArrayList<>();
+        playerInGameList = new ArrayList<>();
+
+        game = new UHCBuilderGame(main);
+        pm.registerEvents(game, main);
 
         createMenu();
 
         setUpCommand();
 
+        startInventory = Bukkit.createInventory(null,4*9);
     }
 
     @Override

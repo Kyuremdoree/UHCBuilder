@@ -2,18 +2,13 @@ package switchuhc.uhc_builder.classes;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.java.Log;
 import org.bukkit.*;
-import org.bukkit.block.Skull;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
-import org.bukkit.event.weather.WeatherEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -24,7 +19,6 @@ import switchuhc.uhc_builder.utilitaires.Cycle;
 import switchuhc.uhc_builder.utilitaires.TimeConverter;
 import switchuhc.uhc_builder.utilitaires.Timer;
 
-import java.io.Console;
 import java.util.Map;
 
 public class UHCBuilderGame implements Listener {
@@ -55,6 +49,9 @@ public class UHCBuilderGame implements Listener {
     @Getter @Setter
     private Cycle cycle;
 
+    @Getter @Setter
+    private CustomScoreboard customScoreboard;
+
     @Getter
     private int BordureSize = 1000;
     public void setBordureSize(int bordureSize) {
@@ -70,6 +67,10 @@ public class UHCBuilderGame implements Listener {
         cycleInventory = Bukkit.createInventory(null, 9, ChatColor.DARK_BLUE+"Paramètres du Cycle Jour/Nuit");
         temps = new Timer(90*60, 20*60, 30);
         temps.setCycleDayNight(10*60);
+
+        customScoreboard = new CustomScoreboard(main);
+        customScoreboard.createScoreboardGame(getTemps(), main.getGameTitle());
+
         SetupBorderInventory();
         SetupPvPInventory();
         SetupEnchantInventory();

@@ -33,7 +33,7 @@ public class HostCommand implements CommandExecutor {
             Bukkit.broadcastMessage("§4[Host] " + ChatColor.YELLOW + sender.getName() + "§f :" + message);
             return true;
         }
-        if (strings[0].toString().contains("heal") && main.getGameStatue().ordinal() < 5) {
+        if (strings[0].toString().contains("heal") && main.getGameStatue().ordinal() < 4) {
             Bukkit.getOnlinePlayers().forEach(players -> players.setHealth(players.getMaxHealth()));
             Bukkit.broadcastMessage(ChatColor.DARK_BLUE+"Tout les joueurs ont été soignez !");
             return true;
