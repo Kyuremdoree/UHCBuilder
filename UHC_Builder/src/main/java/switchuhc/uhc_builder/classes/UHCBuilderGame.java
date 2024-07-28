@@ -20,6 +20,7 @@ import switchuhc.uhc_builder.utilitaires.TimeConverter;
 import switchuhc.uhc_builder.utilitaires.Timer;
 
 import java.util.Map;
+import java.util.UUID;
 
 public class UHCBuilderGame implements Listener {
     @Getter
@@ -124,13 +125,13 @@ public class UHCBuilderGame implements Listener {
         moins5.setItemMeta(metaMoins5);
         moins1.setItemMeta(metaMoins1);
 
-        borderInventory.setItem(10, plus10);
-        borderInventory.setItem(11, plus5);
-        borderInventory.setItem(12, plus1);
+        borderInventory.setItem(16, plus10);
+        borderInventory.setItem(15, plus5);
+        borderInventory.setItem(14, plus1);
         borderInventory.setItem(13, compteur);
-        borderInventory.setItem(14, moins1);
-        borderInventory.setItem(15, moins5);
-        borderInventory.setItem(16, moins10);
+        borderInventory.setItem(12, moins1);
+        borderInventory.setItem(11, moins5);
+        borderInventory.setItem(10, moins10);
 
         metaPlus10.setDisplayName("§2+100 blocks");
         metaPlus5.setDisplayName("§2+50 blocks");
@@ -148,13 +149,13 @@ public class UHCBuilderGame implements Listener {
         moins5.setItemMeta(metaMoins5);
         moins1.setItemMeta(metaMoins1);
 
-        borderInventory.setItem(28, plus10);
-        borderInventory.setItem(29, plus5);
-        borderInventory.setItem(30, plus1);
+        borderInventory.setItem(34, plus10);
+        borderInventory.setItem(33, plus5);
+        borderInventory.setItem(32, plus1);
         borderInventory.setItem(31, compteur);
-        borderInventory.setItem(32, moins1);
-        borderInventory.setItem(33, moins5);
-        borderInventory.setItem(34, moins10);
+        borderInventory.setItem(30, moins1);
+        borderInventory.setItem(29, moins5);
+        borderInventory.setItem(28, moins10);
 
         ItemStack retour = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
         SkullMeta metaRetour = (SkullMeta) retour.getItemMeta();
@@ -196,13 +197,13 @@ public class UHCBuilderGame implements Listener {
         moins5.setItemMeta(metaMoins5);
         moins1.setItemMeta(metaMoins1);
 
-        pvpInventory.setItem(1, plus10);
-        pvpInventory.setItem(2, plus5);
-        pvpInventory.setItem(3, plus1);
+        pvpInventory.setItem(7, plus10);
+        pvpInventory.setItem(6, plus5);
+        pvpInventory.setItem(5, plus1);
         pvpInventory.setItem(4, compteur);
-        pvpInventory.setItem(5, moins1);
-        pvpInventory.setItem(6, moins5);
-        pvpInventory.setItem(7, moins10);
+        pvpInventory.setItem(3, moins1);
+        pvpInventory.setItem(2, moins5);
+        pvpInventory.setItem(1, moins10);
 
         ItemStack retour = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
         SkullMeta metaRetour = (SkullMeta) retour.getItemMeta();
@@ -308,7 +309,6 @@ public class UHCBuilderGame implements Listener {
         if (event.getClickedInventory() == null) return;
         if (event.getClickedInventory().equals(borderInventory)) {
             if (event.getCurrentItem() != null && event.getCurrentItem().hasItemMeta()) {
-                Bukkit.broadcastMessage("Border entry :\n");
                 event.setCancelled(true);
                 switch (event.getCurrentItem().getItemMeta().getDisplayName()) {
                     case "§2+10m":
@@ -354,7 +354,6 @@ public class UHCBuilderGame implements Listener {
                         break;
                 }
                 String tmpBordure = TimeConverter.ToString(TimeConverter.TimeConverteur(getTemps().getTempsBordure()));
-                Bukkit.broadcastMessage("new tmp : " + tmpBordure);
                 ItemMeta itTmp = borderInventory.getItem(13).getItemMeta();
                 itTmp.setDisplayName("Border : §b" + tmpBordure);
                 borderInventory.getItem(13).setItemMeta(itTmp);
@@ -494,6 +493,7 @@ public class UHCBuilderGame implements Listener {
                 cycleInventory.getItem(4).setItemMeta(itTmp);
             }
         }
+        getCustomScoreboard().updateScoreBoardTimer(getTemps());
     }
 
 

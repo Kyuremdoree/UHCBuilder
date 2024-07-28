@@ -70,6 +70,7 @@ public class PlayerListener implements Listener {
                     Bukkit.getLogger().info("[UHC BUILDER] Player Connected");
                     Bukkit.broadcastMessage(player.toString());
                     main.getPlayerList().add(player);
+                    main.getGame().getCustomScoreboard().updateScoreBoardNbPlayer();
                 }
                 break;
             default:
@@ -166,8 +167,9 @@ public class PlayerListener implements Listener {
                 }
             }, 20L);
         }
-        else if (event.getEntity().getKiller() != null && event.getEntity().getKiller() instanceof Player){
-            main.getGame().getCustomScoreboard().updateScoreBoardKills(event.getEntity().getKiller());
+        else {
+            if (event.getEntity().getKiller() != null && event.getEntity().getKiller() instanceof Player)
+                main.getGame().getCustomScoreboard().updateScoreBoardKills(event.getEntity().getKiller());
 
             Location loc = player.getLocation();
 
@@ -192,6 +194,8 @@ public class PlayerListener implements Listener {
                     }, 5 * 20L);
                 }
             }, 20L);
+            main.getPlayerList().remove(player);
+            main.getPlayerInGameList().remove(player.getUniqueId());
         }
     }
 

@@ -31,15 +31,15 @@ public class Timer {
     }
 
     public void decrementPVP(int nb){
-        tempsPVP = tempsPVP - nb;
+        setTempsPVP(tempsPVP - nb);
     }
 
     public void decrementBorder(int nb){
-        tempsBordure = tempsBordure - nb;
+        setTempsBordure(tempsBordure - nb);
     }
 
     public void decrementInvul(int nb){
-        tempsInvulnerabilite = tempsInvulnerabilite - nb;
+        setTempsInvulnerabilite(tempsInvulnerabilite - nb);
     }
 
     public void incrementPVP(int nb){
@@ -51,7 +51,7 @@ public class Timer {
     }
 
     public void incrementInvul(int nb){
-        tempsInvulnerabilite = tempsInvulnerabilite + nb;
+        setTempsInvulnerabilite(tempsInvulnerabilite + nb);
     }
 
     public void incrementActuel(int nb){

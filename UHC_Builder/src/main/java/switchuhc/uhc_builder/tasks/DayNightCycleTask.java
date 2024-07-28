@@ -16,7 +16,7 @@ public class DayNightCycleTask extends BukkitRunnable {
 
     // Début du jour et de la nuit en ticks
     long dayStart = 0;
-    long nightStart;
+    long nightStart = 12000;
 
     long addition;
 
@@ -24,19 +24,14 @@ public class DayNightCycleTask extends BukkitRunnable {
         main = pl;
         dayDuration = (long) main.getGame().getTemps().getCycleDayNight() * 20;
         nightDuration = dayDuration;
-        nightStart = nightDuration;
-        fullCycleDuration = (long) (dayDuration + nightDuration);
-        addition = 24000 / fullCycleDuration;
+        fullCycleDuration = 24000;
+        addition = fullCycleDuration / (dayDuration*2);
     }
     long currentTick = 0;
     World world = Bukkit.getWorld("world");
     @Override
     public void run() {
-        if (currentTick < dayDuration) {
-            world.setTime((dayStart + currentTick) % fullCycleDuration);
-        } else {
-            world.setTime((nightStart + (currentTick - dayDuration)) % fullCycleDuration);
-        }
+        world.setTime(currentTick % fullCycleDuration);
         if(currentTick % fullCycleDuration == dayStart) {
             Bukkit.broadcastMessage(ChatColor.GOLD+"Le jour se lève !");
             main.getGame().setCycle(Cycle.Day);
