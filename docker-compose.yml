@@ -1,0 +1,17 @@
+services:
+  minecraft-server-uhc-builder-plugin:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    stdin_open: true
+    tty: true
+    ports:
+      - 25565:25565
+    environment:
+      EULA: "TRUE"
+      VERSION: 1.8.8
+      TYPE: SPIGOT
+      ONLINE_MODE: "TRUE"
+      SPIGOT_DOWNLOAD_URL: https://cdn.getbukkit.org/spigot/spigot-1.8.8-R0.1-SNAPSHOT-latest.jar
+    volumes:
+      - ./minecraft-server-data:/data

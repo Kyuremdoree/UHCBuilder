@@ -25,3 +25,5 @@ replay_pid*
 
 # Minecraft data
 /minecraft_data
+
+/minecraft-server-data

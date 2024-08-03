@@ -10,11 +10,10 @@ import switchuhc.uhc_builder.utilitaires.Cycle;
 public class DayNightCycleTask extends BukkitRunnable {
 
     UHC_Builder main;
-    long fullCycleDuration;
+    long fullCycleDuration = 24000;
     long dayDuration;
     long nightDuration;
 
-    // Début du jour et de la nuit en ticks
     long dayStart = 0;
     long nightStart = 12000;
 
@@ -24,7 +23,6 @@ public class DayNightCycleTask extends BukkitRunnable {
         main = pl;
         dayDuration = (long) main.getGame().getTemps().getCycleDayNight() * 20;
         nightDuration = dayDuration;
-        fullCycleDuration = 24000;
         addition = fullCycleDuration / (dayDuration*2);
     }
     long currentTick = 0;
