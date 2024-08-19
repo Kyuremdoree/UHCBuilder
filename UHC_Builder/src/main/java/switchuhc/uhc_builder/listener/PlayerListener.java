@@ -2,6 +2,7 @@ package switchuhc.uhc_builder.listener;
 
 import lombok.Getter;
 import org.bukkit.*;
+import org.bukkit.command.ProxiedCommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Player;
@@ -9,11 +10,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.enchantment.EnchantItemEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -38,15 +41,14 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onJoin (PlayerJoinEvent event){
         Player player = event.getPlayer();
-        player.setScoreboard(main.getGame().getCustomScoreboard().getScoreboard());
-        main.getGame().getCustomScoreboard().updateScoreBoardKills(player);
+        player.setScoreboard(main.getGame().getScoreboard());
+        //main.getGame().getCustomScoreboard().updateScoreBoardKills(player);
         switch (main.getGameStatue()){
             case Teleportation:
             case Starting:
             case Waiting:
                 event.setJoinMessage(ChatColor.BLUE + player.getName() +" vient de se connecter !\n");
                 Bukkit.getLogger().info("[UHC BUILDER] Player Connected");
-                Bukkit.broadcastMessage(player.toString());
                 main.getPlayerList().add(player);
                 main.getPlayerInGameList().add(player.getUniqueId());
                 Inventory playerInv = player.getInventory();
@@ -68,10 +70,10 @@ public class PlayerListener implements Listener {
                 if (main.getPlayerInGameList().contains(player.getUniqueId())){
                     event.setJoinMessage(ChatColor.BLUE + player.getName() +" vient de se connecter !\n");
                     Bukkit.getLogger().info("[UHC BUILDER] Player Connected");
-                    Bukkit.broadcastMessage(player.toString());
                     main.getPlayerList().add(player);
                     main.getGame().getCustomScoreboard().updateScoreBoardNbPlayer();
                 }
+                else event.setJoinMessage(null);
                 break;
             default:
                 break;
@@ -89,7 +91,6 @@ public class PlayerListener implements Listener {
                 main.getPlayerList().remove(player);
                 event.setQuitMessage(ChatColor.BLUE + player.getName() +" vient de se déconnecter !\n");
                 Bukkit.getLogger().info("[UHC BUILDER] Player disconnected");
-                Bukkit.broadcastMessage(player.toString());
                 main.getGame().getCustomScoreboard().updateScoreBoardNbPlayer();
                 break;
             case Mining:
@@ -100,9 +101,9 @@ public class PlayerListener implements Listener {
                     main.getPlayerList().remove(player);
                     event.setQuitMessage(ChatColor.BLUE + player.getName() +" vient de se déconnecter !\n");
                     Bukkit.getLogger().info("[UHC BUILDER] Player disconnected");
-                    Bukkit.broadcastMessage(player.toString());
                     main.getGame().getCustomScoreboard().updateScoreBoardNbPlayer();
                 }
+                else event.setQuitMessage(null);
                 break;
         }
     }
@@ -129,6 +130,15 @@ public class PlayerListener implements Listener {
         if (main.getGame().getTemps().getTempsActuel() <= 30 && main.getGameStatue().ordinal() < 4){
             event.setCancelled(true);
         }
+    }
+
+    @EventHandler
+    public void playerTakeDamageFromPlayer(EntityDamageByEntityEvent event){
+        if (!(event.getDamager() instanceof Player)) return;
+        if (!(event.getEntity() instanceof Player)) return;
+        if (main.getGameStatue().ordinal() < 4)
+            event.setCancelled(true);
+
     }
 
     @EventHandler
@@ -168,9 +178,9 @@ public class PlayerListener implements Listener {
             }, 20L);
         }
         else {
-            if (event.getEntity().getKiller() != null && event.getEntity().getKiller() instanceof Player)
-                main.getGame().getCustomScoreboard().updateScoreBoardKills(event.getEntity().getKiller());
-
+            if (event.getEntity().getKiller() != null && event.getEntity().getKiller() instanceof Player) {
+                //main.getGame().getCustomScoreboard().updateScoreBoardKills(event.getEntity().getKiller());
+            }
             Location loc = player.getLocation();
 
             List<ItemStack> drop = new ArrayList<>(event.getDrops());
@@ -190,12 +200,13 @@ public class PlayerListener implements Listener {
                             player.teleport(loc);
                             drop.forEach(item -> Bukkit.getWorld("world").dropItem(loc, item));
                             Bukkit.getWorld("world").spawn(loc, ExperienceOrb.class).setExperience(Exp);
+                            main.getPlayerList().remove(player);
+                            main.getPlayerInGameList().remove(player.getUniqueId());
+                            main.getGame().getCustomScoreboard().updateScoreBoardNbPlayer();
                         }
                     }, 5 * 20L);
                 }
             }, 20L);
-            main.getPlayerList().remove(player);
-            main.getPlayerInGameList().remove(player.getUniqueId());
         }
     }
 
@@ -329,5 +340,10 @@ public class PlayerListener implements Listener {
             }
         }
         return null;
+    }
+
+    @EventHandler
+    public void onExpReceive(PlayerExpChangeEvent event){
+        event.setAmount((int)(event.getAmount() * main.getGame().getExpMultiplicator()));
     }
 }

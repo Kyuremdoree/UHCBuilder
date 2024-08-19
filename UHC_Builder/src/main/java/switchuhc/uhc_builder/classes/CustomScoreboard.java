@@ -15,8 +15,8 @@ public class CustomScoreboard {
     private Scoreboard scoreboard;
     private UHC_Builder main;
 
-    public CustomScoreboard(UHC_Builder pl){
-        scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+    public CustomScoreboard(UHC_Builder pl, Scoreboard scoreboard){
+        this.scoreboard = scoreboard;
         main = pl;
     }
 

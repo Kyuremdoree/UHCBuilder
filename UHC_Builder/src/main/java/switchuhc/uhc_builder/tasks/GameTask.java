@@ -86,15 +86,14 @@ public class GameTask extends BukkitRunnable {
                 @Override
                 public void run() {
                     if (main.getGame().getWb().getSize() >= 150) {
-                        main.getGame().getWb().setSize(main.getGame().getWb().getSize() - 0.5);
+                        main.getGame().getWb().setSize(main.getGame().getWb().getSize() - ((double) 1/20));
                     }
 
                     else {
-                        Finish();
                         main.setGameStatue(GameStatue.Endgame);
                     }
                 }
-            }, 0, 20);
+            }, 0, 1);
         }
 
         if (main.getGameStatue() == GameStatue.Terminated) {
@@ -102,19 +101,11 @@ public class GameTask extends BukkitRunnable {
         }
 
         if(main.getGame().getTemps().getTempsActuel() % (60*20) == 0 ){
-            main.getGame().setNbJour((int)(main.getGame().getTemps().getTempsActuel() / (60*20)));
+            main.getGame().setNbJour((int)(main.getGame().getTemps().getTempsActuel() / (60*20))+1);
             main.getGame().getCustomScoreboard().updateScoreBoardNbJour();
         }
-
-        Evenement(main.getGame().getTemps().getTempsActuel());
 
         main.getGame().getTemps().incrementActuel(1);
     }
 
-    // Méthodes à override pour les modes de jeux
-    public void Finish(){
-        Bukkit.broadcastMessage("C'est Fini !");
-    }
-
-    public void Evenement(int tempsActuel){};
 }

@@ -6,6 +6,8 @@ import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
@@ -13,6 +15,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.util.io.BukkitObjectInputStream;
 import switchuhc.uhc_builder.UHC_Builder;
 import switchuhc.uhc_builder.tasks.StartTask;
 import switchuhc.uhc_builder.utilitaires.Cycle;
@@ -51,7 +55,19 @@ public class UHCBuilderGame implements Listener {
     private Cycle cycle;
 
     @Getter @Setter
+    private Scoreboard scoreboard;
+
+    @Getter @Setter
     private CustomScoreboard customScoreboard;
+
+    @Getter @Setter
+    private CustomTabList customTabList;
+
+    @Getter @Setter
+    private Scoreboard tabList;
+
+    @Getter @Setter
+    private double ExpMultiplicator = 1;
 
     @Getter
     private int BordureSize = 1000;
@@ -66,11 +82,16 @@ public class UHCBuilderGame implements Listener {
         pvpInventory = Bukkit.createInventory(null, 9, ChatColor.DARK_PURPLE+"Paramètres du PvP");
         enchantInventory = Bukkit.createInventory(null, 9*6,ChatColor.DARK_PURPLE+"Limite d'Enchantement");
         cycleInventory = Bukkit.createInventory(null, 9, ChatColor.DARK_BLUE+"Paramètres du Cycle Jour/Nuit");
-        temps = new Timer(90*60, 20*60, 30);
+        temps = new Timer(90*60, 20*60, 0);
         temps.setCycleDayNight(10*60);
 
-        customScoreboard = new CustomScoreboard(main);
+        scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+
+        customScoreboard = new CustomScoreboard(main, scoreboard);
         customScoreboard.createScoreboardGame(getTemps(), main.getGameTitle());
+
+        customTabList = new CustomTabList(main, scoreboard);
+        customTabList.createTabList();
 
         SetupBorderInventory();
         SetupPvPInventory();
@@ -273,13 +294,46 @@ public class UHCBuilderGame implements Listener {
         ItemStack bootDiamond = new ItemStack(Material.DIAMOND_BOOTS,1);
         ItemStack legginDiamond = new ItemStack(Material.DIAMOND_LEGGINGS,1);
         ItemStack chestplateDiamond = new ItemStack(Material.DIAMOND_CHESTPLATE, 1);
-        ItemStack helmetDiamand = new ItemStack(Material.DIAMOND_HELMET,1);
+        ItemStack helmetDiamond = new ItemStack(Material.DIAMOND_HELMET,1);
 
         ItemStack arc = new ItemStack(Material.BOW,1);
 
         ItemStack woodSword = new ItemStack(Material.WOOD_SWORD,1);
 
         ItemStack fire = new ItemStack(Material.BLAZE_POWDER, 1);
+
+        ItemStack bottle = new ItemStack(Material.EXP_BOTTLE,1);
+        ItemMeta bottleMeta = bottle.getItemMeta();
+        bottleMeta.setDisplayName(ChatColor.GOLD+"EXP boost : "+ ChatColor.AQUA +(String.valueOf(getExpMultiplicator()*100)+"%"));
+        bottle.setItemMeta(bottleMeta);
+
+        /*
+        arc.addEnchantment(Enchantment.ARROW_DAMAGE, main.getConfig().getInt("enchant-limit.enchantments.DEFAULT.ARROW_DAMAGE"));
+        woodSword.addEnchantment(Enchantment.KNOCKBACK, main.getConfig().getInt("enchant-limit.enchantments.DEFAULT.KNOCKBACK"));
+        if (main.getConfig().getInt("enchant-limit.enchantments.DEFAULT.FIRE_ASPECT") != 0)
+            fire.addEnchantment(Enchantment.FIRE_ASPECT, main.getConfig().getInt("enchant-limit.enchantments.DEFAULT.FIRE_ASPECT"));
+
+        int protect = main.getConfig().getInt("enchant-limit.enchantments.IRON.PROTECTION_ENVIRONMENTAL");
+
+        bootIron.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, protect);
+        legginIron.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, protect);
+        chestplateIron.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, protect);
+        helmetIron.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, protect);
+
+        int damage = main.getConfig().getInt("enchant-limit.enchantments.IRON.DAMAGE_ALL");
+
+        ironSword.addEnchantment(Enchantment.DAMAGE_ALL, damage);
+
+        protect = main.getConfig().getInt("enchant-limit.enchantments.DIAMOND.PROTECTION_ENVIRONMENTAL");
+
+        bootDiamond.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, protect);
+        legginDiamond.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, protect);
+        chestplateDiamond.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, protect);
+        helmetDiamond.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, protect);
+
+        damage = main.getConfig().getInt("enchant-limit.enchantments.DIAMOND.DAMAGE_ALL");
+
+        diamandSword.addEnchantment(Enchantment.DAMAGE_ALL, damage);*/
 
         enchantInventory.setItem(11,helmetIron);
         enchantInventory.setItem(20,chestplateIron);
@@ -290,8 +344,9 @@ public class UHCBuilderGame implements Listener {
         enchantInventory.setItem(22,arc);
         enchantInventory.setItem(31,woodSword);
         enchantInventory.setItem(40, fire);
+        enchantInventory.setItem(49,bottle);
 
-        enchantInventory.setItem(15,helmetDiamand);
+        enchantInventory.setItem(15,helmetDiamond);
         enchantInventory.setItem(24,chestplateDiamond);
         enchantInventory.setItem(33,legginDiamond);
         enchantInventory.setItem(42,bootDiamond);
@@ -458,6 +513,19 @@ public class UHCBuilderGame implements Listener {
                             event.getWhoClicked().closeInventory();
                             event.getWhoClicked().openInventory(main.getMenuInventory());
                             break;
+                        case EXP_BOTTLE:
+                            ItemMeta meta = event.getCurrentItem().getItemMeta();
+                            if(event.getAction() == null) return;
+                            else if (event.getAction() == InventoryAction.PICKUP_ALL) {
+                                ExpMultiplicator = ExpMultiplicator + 0.10;
+                                meta.setDisplayName(ChatColor.GOLD+"EXP boost : "+ ChatColor.AQUA +(String.valueOf((int)(getExpMultiplicator()*100))+"%"));
+                                event.getCurrentItem().setItemMeta(meta);
+                            } else if (event.getAction() == InventoryAction.PICKUP_HALF) {
+                                ExpMultiplicator = ExpMultiplicator - 0.10;
+                                meta.setDisplayName(ChatColor.GOLD+"EXP boost : "+ ChatColor.AQUA +(String.valueOf((int)(getExpMultiplicator()*100))+"%"));
+                                event.getCurrentItem().setItemMeta(meta);
+                            }
+                            break;
                     }
                 }
             }
@@ -503,7 +571,6 @@ public class UHCBuilderGame implements Listener {
         if (event.getItemDrop().getItemStack().getType().equals(Material.COMMAND)) {
             event.setCancelled(true);
         }
-        event.setCancelled(true);
     }
     @EventHandler
     public void onWeather(WeatherChangeEvent event){

@@ -1,0 +1,14 @@
+enchant-limit:
+    enchantments:
+        - DEFAULT:
+          FIRE_ASPECT: 0
+          KNOCKBACK: 1
+          ARROW_DAMAGE: 3
+        - IRON:
+          DAMAGE_ALL: 4
+          PROTECTION_ENVIRONMENTAL: 3
+        - DIAMOND:
+          DAMAGE_ALL: 3
+          PROTECTION_ENVIRONMENTAL: 2
+start-inv:
+  - COOKED_BEEF: 64

@@ -26,7 +26,7 @@ public class Timer {
     }
 
     public void setTempsPVP(int tempsPVP) {
-        if (tempsPVP >= this.tempsInvulnerabilite)
+        if (tempsPVP >= this.tempsInvulnerabilite - 1)
             this.tempsPVP = tempsPVP;
     }
 
